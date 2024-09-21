@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "etf-monitor"
+version = "1.0.0"
+description = "Monitor Etf via justETF"
+authors = ["Giovanni Giorgi (macmini) <jj@gioorgi.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+stockdex = "0.6.1"
+fastapi = {extras = ["standard"], version = "^0.115.0"}
+pydantic-settings = "^2.5.2"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

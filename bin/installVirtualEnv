@@ -1,0 +1,14 @@
+#!/bin/bash
+cd $(dirname $0)/..
+set -eo pipefail
+echo Installig virutalenv
+if [ ! -d venv ]; then
+    python -m pip install virtualenv
+    virtualenv ./venv
+fi
+source venv/bin/activate
+which pip
+pip install poetry==1.2.0
+# Address error https://github.com/python-poetry/poetry/issues/1917
+export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+poetry install --with dev
