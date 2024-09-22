@@ -13,7 +13,7 @@ Install virtualenv using the script provided:
 
  Then enter in the virtualenv and run the endless server
 
-    fastapi dev etf-monitor/server.py
+    fastapi dev etf_monitor/server.py
 
 Look at the documentation here:
 

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "etf-monitor"
+name = "etf_monitor"
 version = "1.0.0"
 description = "Monitor Etf via justETF"
 authors = ["Giovanni Giorgi (macmini) <jj@gioorgi.com>"]
