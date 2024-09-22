@@ -11,10 +11,13 @@ python = "^3.12"
 stockdex = "0.6.1"
 fastapi = {extras = ["standard"], version = "^0.115.0"}
 pydantic-settings = "^2.5.2"
+pandas = "2.2.3"
+requests = "2.32.3"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"
+pylint = "^3.3.0"
 
 [build-system]
 requires = ["poetry-core"]

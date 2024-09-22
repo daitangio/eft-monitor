@@ -1,0 +1,5 @@
+#!/bin/bash
+source venv/bin/activate
+set -x 
+python3  -m unittest discover -v
+poetry run pylint --rcfile=./pylint.rc  $(find etf_monitor tests -iname '*.py' -type f)
