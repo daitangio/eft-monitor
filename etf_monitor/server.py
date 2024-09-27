@@ -1,25 +1,38 @@
 from typing import List
+import logging,datetime
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 import pandas as pd
 
-# Cache
-from functools import lru_cache
 
 import requests
 
-from .justetf import get_quote
+from .justetf import get_quote,get_info
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # First implementation just have an in memory list of isin with app (average purchase price= prezzo medio di carico)
 RUN_LIST = {
-    "IE00B4K48X80",
-    "IE00B579F325",
-    "DE000A1EK0G3",
-    "IE00B5M1WJ87",
-    "IE00B6YX5D40",
-    "IE00B4L5Y983",
-    "IE00B8GKDB10",
+    "IE00B4K48X80":{
+        "alertup": 80,
+        "alertdown": 78,
+        "app": 78.402857,
+        "qty": 7
+    },
+    "IE00B579F325":None,
+    "DE000A1EK0G3":None,
+    "IE00B5M1WJ87":None,
+    "IE00B6YX5D40":None,
+    "IE00B4L5Y983":None,
+    "IE00B8GKDB10":{
+        "alertup": 64,
+        "alertdown": 60,
+        "app": 0,
+        "qty": 0
+    },
 }
 
 
@@ -68,12 +81,25 @@ async def scan_price():
     global RUN_LIST
     quote_list = []
     isin_list = []
-    for isin in RUN_LIST:
+    isin_info=[]
+    date_list = []
+    for isin in RUN_LIST.keys():
         quote = get_quote(isin)
         isin_list.append(isin)
         quote_list.append(quote)
-    df = pd.DataFrame({"isin": isin_list, "price": quote_list})
-    return df.to_json()
+        isin_info.append(get_info(isin))
+        date_list.append(datetime.datetime.now().isoformat())
+        if RUN_LIST[isin]!=None:
+            log.info(f"Processing {isin} {isin_info}")
+            alert_limit=RUN_LIST[isin]["alertup"]
+            if quote > alert_limit:
+                log.info(f"Reached alert limit {alert_limit} by {isin} {quote} ")
+            alert_limit_below=RUN_LIST[isin]["alertdown"]
+            if quote < alert_limit_below:
+                log.info(f"Reached LOWER alert limit {alert_limit_below} by {isin} {quote} ")
+    df = pd.DataFrame({"isin": isin_list, "price": quote_list, "date": date_list})
+    df.to_csv("./data/etf_monitor.csv", mode='a', header=False, index=False)
+    return df
 
 
 @app.post("/add/")

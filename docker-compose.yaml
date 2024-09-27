@@ -1,0 +1,12 @@
+services:
+  etf_monitor:
+    build: 
+      context: .
+      dockerfile: etc/cicd/Dockerfile
+    command: ./venv/bin/fastapi run etf_monitor/server.py
+    env_file:
+      - .env
+    ports:
+      - "4000:8000"
+    volumes:
+      - /opt/etf_monitor/data:/workspace/data
