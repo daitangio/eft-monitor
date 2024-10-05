@@ -1,5 +1,6 @@
 from typing import List
 import logging,datetime
+import telegram
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -14,7 +15,8 @@ from .justetf import get_quote,get_info
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# First implementation just have an in memory list of isin with app (average purchase price= prezzo medio di carico)
+# First implementation just have an in memory list of isin with app (average purchase price= prezzo medio di carico) and two ather alerts limits.
+# Below a sample
 RUN_LIST = {
     "IE00B4K48X80":{
         "alertup": 80,
@@ -56,11 +58,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     etf_env: str = "prod"
     db_url: str
+    telegram_token_api: str
+    telegram_chat_id: str
+    docker_host:str
     model_config = SettingsConfigDict(env_file=".env")
 
 
 settings = Settings()
 app = FastAPI()
+
+async def etf_notify(msg:str):
+    bot = telegram.Bot(token=settings.telegram_token_api)
+    await bot.send_message(chat_id=settings.telegram_chat_id, text=msg)
+
+
 
 
 @app.get("/")
@@ -70,6 +81,7 @@ async def root():
     Wellcome!
     Etf monitor is able to monitor ETF using JustETF api, and
     """
+    await etf_notify("Etf_monitor ready to report")
     return {"version": "etf_monitor-1.0.0", "env": settings.etf_env}
 
 
@@ -93,10 +105,14 @@ async def scan_price():
             log.info(f"Processing {isin} {isin_info}")
             alert_limit=RUN_LIST[isin]["alertup"]
             if quote > alert_limit:
-                log.info(f"Reached alert limit {alert_limit} by {isin} {quote} ")
+                msg=f"Reached alert limit {alert_limit} by {isin} {quote} "
+                log.info(msg)
+                await etf_notify(msg)
             alert_limit_below=RUN_LIST[isin]["alertdown"]
             if quote < alert_limit_below:
-                log.info(f"Reached LOWER alert limit {alert_limit_below} by {isin} {quote} ")
+                msg=f"Reached LOWER alert limit {alert_limit_below} by {isin} {quote} "
+                log.info(msg)
+                await etf_notify(msg)
     df = pd.DataFrame({"isin": isin_list, "price": quote_list, "date": date_list})
     df.to_csv("./data/etf_monitor.csv", mode='a', header=False, index=False)
     return df
