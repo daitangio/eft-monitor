@@ -16,6 +16,8 @@ Install virtualenv using the script provided:
 
     fastapi dev etf_monitor/server.py
 
+Run the cron job with
+
 Look at the documentation here:
 
 http://127.0.0.1:8000/docs  

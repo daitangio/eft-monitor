@@ -19,10 +19,11 @@ logging.basicConfig(level=logging.INFO)
 # Below a sample
 RUN_LIST = {
     "IE00B4K48X80":{
-        "alertup": 80,
-        "alertdown": 78,
+        "alertup": 85,
+        "alertdown": 79,
         "app": 78.402857,
-        "qty": 7
+        "qty": 7,
+        "desc": "MSCI Europe leading stocks industrial countries"
     },
     "IE00B579F325":None,
     "DE000A1EK0G3":None,
@@ -30,10 +31,11 @@ RUN_LIST = {
     "IE00B6YX5D40":None,
     "IE00B4L5Y983":None,
     "IE00B8GKDB10":{
-        "alertup": 64,
-        "alertdown": 60,
+        "alertup": 65,
+        "alertdown": 64,
         "app": 0,
-        "qty": 0
+        "qty": 0,
+        "desc":"FTSE All-World High Dividend Yield index"
     },
 }
 
@@ -60,8 +62,7 @@ class Settings(BaseSettings):
     db_url: str
     telegram_token_api: str
     telegram_chat_id: str
-    docker_host:str
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file="etf_monitor.env")
 
 
 settings = Settings()
@@ -99,21 +100,26 @@ async def scan_price():
         quote = get_quote(isin)
         isin_list.append(isin)
         quote_list.append(quote)
-        isin_info.append(get_info(isin))
-        date_list.append(datetime.datetime.now().isoformat())
+        #isin_info.append(get_info(isin))
+        current_date=datetime.datetime.now().isoformat()
+        date_list.append(current_date)        
         if RUN_LIST[isin]!=None:
-            log.info(f"Processing {isin} {isin_info}")
-            alert_limit=RUN_LIST[isin]["alertup"]
-            if quote > alert_limit:
-                msg=f"Reached alert limit {alert_limit} by {isin} {quote} "
+            current_etf=RUN_LIST[isin]
+            log.info(f"Processing {isin}")
+            alert_limit=current_etf["alertup"]
+            desc=current_etf.get("desc","")
+            if quote > alert_limit:                
+                msg=f"{isin} +Reached alert limit {alert_limit} >> {quote} {desc}"
                 log.info(msg)
                 await etf_notify(msg)
-            alert_limit_below=RUN_LIST[isin]["alertdown"]
+            alert_limit_below=current_etf["alertdown"]
             if quote < alert_limit_below:
-                msg=f"Reached LOWER alert limit {alert_limit_below} by {isin} {quote} "
+                msg=f"{isin} -Reached alert limit {alert_limit_below} >> {quote} {desc}"
                 log.info(msg)
                 await etf_notify(msg)
-    df = pd.DataFrame({"isin": isin_list, "price": quote_list, "date": date_list})
+        dfIsin=pd.DataFrame({"date": [current_date],   "price": [quote]})
+        dfIsin.to_csv(f"./data/{isin}_etf_monitor.csv", mode='a', header=False, index=False)    
+    df = pd.DataFrame({"isin": isin_list, "date": date_list, "price": quote_list} )
     df.to_csv("./data/etf_monitor.csv", mode='a', header=False, index=False)
     return df
 
